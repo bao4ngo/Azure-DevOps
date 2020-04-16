@@ -1,0 +1,34 @@
+trigger:
+  - master
+  
+  pool:
+    vmImage: 'ubuntu-latest'
+  
+  variables:
+    buildConfiguration: 'Release'
+  
+  steps:
+  - task: UseDotNet@2
+    displayName: "Use .NET Core 3.1.x"
+    inputs:
+      packageType: 'sdk'
+      version: '3.1.x'    
+  
+  - script: dotnet build $(Build.SourcesDirectory)/GreatJobsServices.sln --configuration $(buildConfiguration)
+    displayName: 'dotnet build $(buildConfiguration)'
+      
+  - task: DotNetCoreCLI@2
+    displayName: "Publish with .NET CLI"
+    inputs:
+      command: 'publish'
+      projects: '**/GreatJobs.Api.csproj'
+      publishWebProjects: true
+      arguments: '-r linux-x64 --configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+      zipAfterPublish: true
+  
+  - task: PublishBuildArtifacts@1
+    displayName: "Upload Artifacts"
+    inputs:
+      PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      ArtifactName: 'GreatJobs.Api'
+  
